@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caça-Figuras – Jogo das Figuras de Linguagem</title>
+<meta name="description" content="Jogo educativo sobre as 9 principais figuras de linguagem: metáfora, comparação, metonímia, catacrese, sinestesia, hipérbole, eufemismo, personificação e ironia.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✒️</text></svg>">
+<style>
+:root{
+  --paper:#f2f5fb; --card:#ffffff; --ink:#14213d; --muted:#55607a; --line:#d6dcea; --hl:#ffe45e;
+  --ok:#17a589; --bad:#e5486b;
+  --c-metafora:#ff9f43; --c-comparacao:#3fa7ff; --c-metonimia:#9b6bff; --c-catacrese:#2fbf8f; --c-sinestesia:#ff5da2;
+  --c-hiperbole:#ff5d4a; --c-eufemismo:#7fb83a; --c-personificacao:#18b5c7; --c-ironia:#d9a400;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#0f1626;--card:#19223a;--ink:#eef2fb;--muted:#a3adc7;--line:#2c3860;--hl:#8a7600}
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:12px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Nunito","Segoe UI",system-ui,sans-serif;line-height:1.55;min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3,.serif{font-family:"Fraunces",Georgia,"Times New Roman",serif}
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:24px 18px 40px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.hl{background:linear-gradient(transparent 12%,var(--hl) 12%,var(--hl) 88%,transparent 88%);padding:0 .15em;border-radius:3px}
+.btn{border:2px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:12px;padding:12px 22px;font-weight:800;font-size:1.05rem;transition:transform .12s}
+.btn:hover{transform:translateY(-2px)}
+.btn.alt{background:transparent;color:var(--ink)}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.hidden{display:none!important}
+
+/* início */
+.hero{padding:28px 0 8px}
+.hero h1{font-size:clamp(2.3rem,8vw,3.8rem);line-height:1.05;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+.hero p{font-size:1.1rem;color:var(--muted);max-width:56ch;margin:0 0 22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 26px}
+.chip{font-weight:800;font-size:.9rem;padding:5px 12px;border-radius:99px;color:#14213d;background:var(--c)}
+.best{margin-top:16px;color:var(--muted);font-weight:700}
+
+/* aprender */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+.learn-grid{display:grid;gap:14px}
+.fig{background:var(--card);border:2px solid var(--line);border-left:10px solid var(--c);border-radius:14px;padding:16px 18px}
+.fig h3{margin:0 0 4px;font-size:1.5rem}
+.fig p{margin:6px 0}
+.fig .ex{font-family:"Fraunces",Georgia,serif;font-style:italic;font-size:1.08rem}
+.fig .why{color:var(--muted);font-size:.95rem}
+
+/* jogo */
+.hud{display:flex;justify-content:space-between;align-items:center;font-weight:800;margin-bottom:10px;gap:10px;flex-wrap:wrap}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:22px}
+.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
+.q{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:24px 22px;margin-bottom:18px}
+.q small{color:var(--muted);font-weight:700}
+.q .sentence{font-family:"Fraunces",Georgia,serif;font-size:clamp(1.4rem,5vw,1.9rem);line-height:1.35;margin:8px 0 0;font-weight:600}
+.opts{display:grid;gap:10px}
+@media(min-width:560px){.opts{grid-template-columns:1fr 1fr}}
+.opt{text-align:left;background:var(--card);border:2px solid var(--line);border-bottom:5px solid var(--c);border-radius:12px;padding:14px 16px;font-weight:800;font-size:1.05rem}
+.opt:hover:not(:disabled){border-color:var(--ink);border-bottom-color:var(--c)}
+.opt:disabled{cursor:default}
+.opt.right{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+.fb{border-radius:14px;padding:16px 18px;margin:18px 0;border:2px solid var(--line);background:var(--card)}
+.fb.ok{border-color:var(--ok)}.fb.no{border-color:var(--bad)}
+.fb b{font-size:1.1rem}
+.fb p{margin:6px 0 0}
+.pulse{animation:pulse .35s}
+@keyframes pulse{50%{transform:scale(1.04)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* fim */
+.end{text-align:center;padding:20px 0}
+.end h2{font-size:2.2rem;margin:.2em 0}
+.score{font-family:"Fraunces",Georgia,serif;font-size:4rem;font-weight:800;line-height:1}
+.end .row{justify-content:center;margin-top:20px}
+.review{text-align:left;margin-top:26px}
+.review li{margin:6px 0}
+
+/* rodapé */
+footer{border-top:2px solid var(--line);padding:22px 18px;text-align:center;color:var(--muted);font-size:.95rem}
+footer strong{color:var(--ink)}
+footer .team{margin-top:6px}
+</style>
+</head>
+<body>
+<main>
+
+<!-- INÍCIO -->
+<section id="home" class="hero">
+  <h1>Caça-Figuras</h1>
+  <p>Leia a frase, descubra qual figura de linguagem ela esconde e mostre que você domina as <span class="hl">9 figuras mais cobradas</span>. Aprenda primeiro ou jogue direto.</p>
+  <div class="chips" id="chips"></div>
+  <div class="row">
+    <button class="btn" id="btnPlay">Jogar agora</button>
+    <button class="btn alt" id="btnLearn">Aprender as figuras</button>
+  </div>
+  <div class="best" id="best"></div>
+</section>
+
+<!-- APRENDER -->
+<section id="learn" class="hidden">
+  <div class="topbar">
+    <h2 style="margin:0;font-size:2rem">As 9 figuras</h2>
+    <button class="btn alt" data-home>Voltar</button>
+  </div>
+  <div class="learn-grid" id="learnGrid"></div>
+  <div class="row" style="margin-top:22px"><button class="btn" id="btnPlay2">Já aprendi, quero jogar</button></div>
+</section>
+
+<!-- JOGO -->
+<section id="game" class="hidden">
+  <div class="hud">
+    <span id="hudQ">Pergunta 1/10</span>
+    <span id="hudLives" aria-label="Vidas"></span>
+    <span id="hudScore">0 pts</span>
+  </div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="q"><small>Qual figura de linguagem aparece no trecho marcado?</small><p class="sentence" id="sentence"></p></div>
+  <div class="opts" id="opts"></div>
+  <div id="fb" class="fb hidden" aria-live="polite"></div>
+  <button class="btn hidden" id="btnNext">Próxima</button>
+</section>
+
+<!-- FIM -->
+<section id="end" class="end hidden">
+  <div id="endEmoji" style="font-size:3rem"></div>
+  <h2 id="endTitle"></h2>
+  <div class="score" id="endScore"></div>
+  <p id="endMsg" style="color:var(--muted)"></p>
+  <div class="row">
+    <button class="btn" id="btnAgain">Jogar de novo</button>
+    <button class="btn alt" id="btnLearn2">Rever as figuras</button>
+    <button class="btn alt" data-home>Início</button>
+  </div>
+  <div class="review" id="review"></div>
+</section>
+
+</main>
+
+<footer>
+  <div>Créditos: jogo criado por <strong>Arthur Oliveiro</strong></div>
+  <div class="team">Participantes do trabalho: <strong>Sofia Chiavenato</strong>, <strong>Luan Arcanjo</strong> e <strong>Daniela Melo</strong></div>
+</footer>
+
+<script>
+const FIGS = {
+  metafora:{n:"Metáfora",c:"var(--c-metafora)",d:"Comparação implícita: um termo é usado no lugar de outro por semelhança, sem “como” ou “tal qual”.",e:"Aquele homem é uma raposa.",w:"Chamou o homem de raposa diretamente, sem conectivo comparativo."},
+  comparacao:{n:"Comparação",c:"var(--c-comparacao)",d:"Aproxima dois elementos de forma explícita, usando conectivos como “como”, “tal qual”, “feito”, “parece”.",e:"Seus olhos brilham como estrelas.",w:"Há um conectivo comparativo ligando os dois elementos."},
+  metonimia:{n:"Metonímia",c:"var(--c-metonimia)",d:"Troca de um termo por outro que tem relação de proximidade (autor pela obra, continente pelo conteúdo, lugar pela instituição, parte pelo todo).",e:"Li Machado de Assis nas férias.",w:"O nome do autor foi usado no lugar de sua obra."},
+  catacrese:{n:"Catacrese",c:"var(--c-catacrese)",d:"Metáfora tão usada que virou o nome “oficial” de algo, por falta de um termo específico. Ninguém mais percebe a imagem.",e:"O pé da mesa quebrou.",w:"“Pé” foi emprestado do corpo humano e já se tornou o nome da peça."},
+  sinestesia:{n:"Sinestesia",c:"var(--c-sinestesia)",d:"Mistura de sensações de sentidos diferentes (visão, audição, olfato, paladar e tato) na mesma expressão.",e:"Sua voz era doce e suave.",w:"Voz é audição; doce é paladar. Dois sentidos misturados."},
+  hiperbole:{n:"Hipérbole",c:"var(--c-hiperbole)",d:"Exagero intencional para dar mais força à ideia ou à emoção.",e:"Já te avisei um milhão de vezes!",w:"O número é um exagero proposital para enfatizar."},
+  eufemismo:{n:"Eufemismo",c:"var(--c-eufemismo)",d:"Suaviza uma ideia desagradável, dolorosa ou chocante, trocando-a por uma expressão mais delicada.",e:"Meu avô nos deixou ontem.",w:"“Nos deixou” suaviza a palavra “morreu”."},
+  personificacao:{n:"Personificação",c:"var(--c-personificacao)",d:"Também chamada de prosopopeia: atribui ações, sentimentos ou características humanas a seres não humanos ou inanimados.",e:"O vento sussurrava segredos.",w:"Vento não sussurra: é uma ação humana atribuída a ele."},
+  ironia:{n:"Ironia",c:"var(--c-ironia)",d:"Diz o contrário do que se pensa, geralmente para criticar ou zombar. O contexto revela o sentido real.",e:"Que ótimo, perdi o ônibus de novo!",w:"A pessoa diz “ótimo”, mas quer dizer que está chateada."}
+};
+const KEYS = Object.keys(FIGS);
+
+/* [[ ]] marca o trecho que contém a figura */
+const BANK = [
+ ["metafora","Seus olhos [[são dois oceanos]] de calma."],
+ ["metafora","[[A vida é um palco]] e todos somos atores."],
+ ["metafora","Meu irmão [[é uma pedra]] quando o assunto é sentimentos."],
+ ["comparacao","Ele é corajoso [[como um leão]]."],
+ ["comparacao","A criança dormia [[feito um anjo]]."],
+ ["comparacao","Sua pele [[parece seda]], de tão macia."],
+ ["metonimia","Adoro ler [[Clarice Lispector]] antes de dormir."],
+ ["metonimia","Ele tomou [[um copo inteiro]] de suco em segundos."],
+ ["metonimia","[[O Planalto]] divulgou uma nota oficial."],
+ ["catacrese","O [[braço]] da cadeira está solto."],
+ ["catacrese","Vamos [[embarcar]] no ônibus das oito."],
+ ["catacrese","O carro parou na [[boca do túnel]]."],
+ ["sinestesia","Havia [[um cheiro azedo]] de tristeza no ar."],
+ ["sinestesia","O pôr do sol tinha [[uma cor quente]]."],
+ ["sinestesia","Ouvi [[uma voz aveludada]] vindo do palco."],
+ ["hiperbole","Estou [[morrendo de fome]]!"],
+ ["hiperbole","Ela [[chorou rios de lágrimas]] no filme."],
+ ["hiperbole","Esperei [[uma eternidade]] na fila do banco."],
+ ["eufemismo","Infelizmente, ele [[partiu desta para melhor]]."],
+ ["eufemismo","O funcionário [[foi convidado a se retirar]] da empresa."],
+ ["eufemismo","Meu tio [[é um pouco desprovido de cabelos]]."],
+ ["personificacao","[[A lua sorria]] para os namorados na praça."],
+ ["personificacao","[[O sol acordou preguiçoso]] naquela manhã."],
+ ["personificacao","[[As árvores dançavam]] com o vento forte."],
+ ["ironia","[[Que ótimo]], a internet caiu bem na hora da prova!"],
+ ["ironia","[[Adorei acordar às cinco da manhã]] num domingo."],
+ ["ironia","[[Bela hora]] para o celular descarregar, hein?"]
+];
+
+const $=id=>document.getElementById(id);
+const screens=["home","learn","game","end"];
+function show(id){screens.forEach(s=>$(s).classList.toggle("hidden",s!==id));window.scrollTo(0,0)}
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const store={get(){try{return +localStorage.getItem("cacafiguras_best")||0}catch(e){return 0}},set(v){try{localStorage.setItem("cacafiguras_best",v)}catch(e){}}};
+
+/* montagem inicial */
+$("chips").innerHTML=KEYS.map(k=>`<span class="chip" style="--c:${FIGS[k].c}">${FIGS[k].n}</span>`).join("");
+$("learnGrid").innerHTML=KEYS.map(k=>{const f=FIGS[k];return `<article class="fig" style="--c:${f.c}"><h3>${f.n}</h3><p>${f.d}</p><p class="ex">“${f.e}”</p><p class="why">${f.w}</p></article>`}).join("");
+function showBest(){const b=store.get();$("best").textContent=b?`Seu recorde: ${b} pontos`:"Ainda sem recorde. Faça o primeiro!"}
+showBest();
+
+/* jogo */
+const TOTAL=10;let Q=[],i=0,score=0,lives=3,streak=0,answered=false,errors=[];
+function start(){
+  Q=shuffle(BANK).slice(0,TOTAL);i=0;score=0;lives=3;streak=0;errors=[];
+  show("game");render();
+}
+function hl(s,on){return s.replace(/\[\[(.+?)\]\]/g,(m,t)=>on?`<span class="hl">${t}</span>`:t)}
+function render(){
+  answered=false;
+  const [key,txt]=Q[i];
+  $("sentence").innerHTML="“"+hl(txt,true)+"”";
+  $("hudQ").textContent=`Pergunta ${i+1}/${TOTAL}`;
+  $("hudLives").textContent="❤️".repeat(lives)+"🖤".repeat(3-lives);
+  $("hudScore").textContent=score+" pts";
+  $("prog").style.width=(i/TOTAL*100)+"%";
+  const wrong=shuffle(KEYS.filter(k=>k!==key)).slice(0,3);
+  $("opts").innerHTML=shuffle([key,...wrong]).map(k=>`<button class="opt" data-k="${k}" style="--c:${FIGS[k].c}">${FIGS[k].n}</button>`).join("");
+  $("fb").classList.add("hidden");$("btnNext").classList.add("hidden");
+}
+$("opts").addEventListener("click",e=>{
+  const b=e.target.closest(".opt");if(!b||answered)return;answered=true;
+  const [key,txt]=Q[i],pick=b.dataset.k,ok=pick===key;
+  document.querySelectorAll(".opt").forEach(o=>{o.disabled=true;if(o.dataset.k===key)o.classList.add("right")});
+  const f=$("fb");f.classList.remove("hidden","ok","no");
+  if(ok){streak++;const gain=100+Math.min(streak-1,5)*20;score+=gain;b.classList.add("pulse");
+    f.classList.add("ok");f.innerHTML=`<b>Certo! +${gain} pts</b>${streak>1?` <span>(sequência de ${streak})</span>`:""}<p><b>${FIGS[key].n}:</b> ${FIGS[key].w}</p>`}
+  else{streak=0;lives--;b.classList.add("wrong");errors.push([key,txt,pick]);
+    f.classList.add("no");f.innerHTML=`<b>Não foi dessa vez.</b><p>A resposta era <b>${FIGS[key].n}</b>. ${FIGS[key].d}</p>`}
+  $("hudLives").textContent="❤️".repeat(lives)+"🖤".repeat(3-lives);
+  $("hudScore").textContent=score+" pts";
+  const last=i===TOTAL-1||lives===0;
+  $("btnNext").textContent=last?"Ver resultado":"Próxima";
+  $("btnNext").classList.remove("hidden");$("btnNext").focus();
+});
+$("btnNext").onclick=()=>{ if(i===TOTAL-1||lives===0){finish()}else{i++;render()} };
+
+function finish(){
+  const answeredCount=i+1,hits=answeredCount-errors.length;
+  const best=store.get();const rec=score>best;if(rec)store.set(score);showBest();
+  let t,em,m;
+  if(lives===0){em="💔";t="Acabaram as vidas";m="Revise as figuras e tente de novo. Cada erro ensina algo."}
+  else if(score>=1100){em="🏆";t="Mestre das Figuras";m="Você domina a linguagem figurada. Impressionante!"}
+  else if(score>=800){em="🌟";t="Quase lá";m="Ótimo desempenho. Mais uma rodada e o título é seu."}
+  else{em="📚";t="Bom começo";m="Vale rever o guia das figuras antes de jogar de novo."}
+  $("endEmoji").textContent=em;$("endTitle").textContent=t;
+  $("endScore").textContent=score;
+  $("endMsg").textContent=`${hits} acerto(s) em ${answeredCount} pergunta(s). ${rec?"Novo recorde!":m}`;
+  $("review").innerHTML=errors.length?`<h3>Para revisar</h3><ul>`+errors.map(([k,t,p])=>`<li>“${hl(t,true)}” → <b>${FIGS[k].n}</b> (você marcou ${FIGS[p].n})</li>`).join("")+`</ul>`:`<h3>Sem erros nesta rodada. Parabéns!</h3>`;
+  show("end");
+}
+
+/* navegação */
+$("btnPlay").onclick=start;$("btnPlay2").onclick=start;$("btnAgain").onclick=start;
+$("btnLearn").onclick=()=>show("learn");$("btnLearn2").onclick=()=>show("learn");
+document.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>show("home"));
+</script>
+</body>
+</html>
